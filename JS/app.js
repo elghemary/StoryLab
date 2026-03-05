@@ -1,191 +1,212 @@
 /* ==========================================================
-   Stellar Quest — Library JS  (library/JS/app.js)
+   StoriesLab — library/JS/app.js
    ========================================================== */
 
 /* ══════════════════════════════════════════════════════════
-   ANIMATED STAR FIELD + SHOOTING STARS
+   ANIMATED STEM BACKGROUND
+   Floating STEM-themed particles: atoms, nodes, sigma,
+   pi, binary bits, circuit dots — connected by faint lines
    ══════════════════════════════════════════════════════════ */
 (function initCanvas() {
-  const canvas = document.getElementById('space-canvas');
+  const canvas = document.getElementById('stem-canvas');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
+  let W, H;
 
-  let W, H, stars = [], shooters = [];
+  /* STEM glyph set — one char per particle */
+  const GLYPHS = [
+    '⚛','∑','∫','π','Δ','∞','λ','σ','μ','φ',
+    '0','1','⊕','⊗','∇','√','≈','∈','⊂','α',
+    '⚙','◈','◇','○','◉',
+  ];
+
+  /* STEM accent colours matching CSS variables */
+  const COLORS = [
+    'rgba(91,156,246,',   /* blue — CS / physics */
+    'rgba(245,200,66,',   /* gold — space */
+    'rgba(52,211,153,',   /* teal — biology */
+    'rgba(251,113,133,',  /* rose — robotics */
+    'rgba(167,139,250,',  /* purple — math */
+    'rgba(251,146,60,',   /* orange — chemistry */
+  ];
+
+  let particles = [];
 
   function resize() {
     W = canvas.width  = window.innerWidth;
     H = canvas.height = window.innerHeight;
   }
 
-  function makeStar() {
+  function makeParticle() {
+    const color = COLORS[Math.floor(Math.random() * COLORS.length)];
     return {
       x:     Math.random() * W,
       y:     Math.random() * H,
-      r:     Math.random() * 1.4 + 0.3,
-      alpha: Math.random() * 0.6 + 0.2,
-      speed: Math.random() * 0.008 + 0.002,
-      phase: Math.random() * Math.PI * 2,
+      vx:    (Math.random() - 0.5) * 0.28,
+      vy:    (Math.random() - 0.5) * 0.28,
+      glyph: GLYPHS[Math.floor(Math.random() * GLYPHS.length)],
+      size:  Math.random() * 9 + 8,           /* 8–17px font */
+      alpha: Math.random() * 0.18 + 0.06,     /* subtle */
+      color: color,
+      pulse: Math.random() * Math.PI * 2,
+      pulseSpeed: Math.random() * 0.012 + 0.005,
     };
   }
 
-  function initStars() {
-    stars = [];
-    const count = Math.floor((W * H) / 5000);
-    for (let i = 0; i < count; i++) stars.push(makeStar());
+  function init() {
+    const count = Math.min(Math.floor((W * H) / 14000), 80);
+    particles = Array.from({ length: count }, makeParticle);
   }
 
-  function makeShooter() {
-    const x = Math.random() * W * 1.2;
-    const y = Math.random() * H * 0.5;
-    const angle = (Math.random() * 20 + 20) * Math.PI / 180;
-    return {
-      x, y,
-      vx: Math.cos(angle) * (6 + Math.random() * 5),
-      vy: Math.sin(angle) * (6 + Math.random() * 5),
-      len: 80 + Math.random() * 120,
-      alpha: 1,
-      life: 1,
-    };
-  }
+  const CONNECT_DIST = 130;
 
   function draw(t) {
     ctx.clearRect(0, 0, W, H);
+    ctx.font = '';
 
-    /* static stars with gentle twinkle */
-    stars.forEach(s => {
-      const a = s.alpha * (0.7 + 0.3 * Math.sin(t * s.speed + s.phase));
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255,255,255,${a})`;
-      ctx.fill();
+    /* move */
+    particles.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.pulse += p.pulseSpeed;
+      /* wrap */
+      if (p.x < -20) p.x = W + 20;
+      if (p.x > W + 20) p.x = -20;
+      if (p.y < -20) p.y = H + 20;
+      if (p.y > H + 20) p.y = -20;
     });
 
-    /* shooting stars */
-    shooters = shooters.filter(sh => sh.life > 0);
-    shooters.forEach(sh => {
-      sh.x    += sh.vx;
-      sh.y    += sh.vy;
-      sh.life -= 0.018;
+    /* connection lines */
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const a = particles[i], b = particles[j];
+        const dx = a.x - b.x, dy = a.y - b.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < CONNECT_DIST) {
+          const lineAlpha = (1 - dist / CONNECT_DIST) * 0.06;
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.strokeStyle = `rgba(150,165,200,${lineAlpha})`;
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
 
-      const tail = { x: sh.x - sh.vx * (sh.len / sh.vx), y: sh.y - sh.vy * (sh.len / sh.vx) };
-      const grad = ctx.createLinearGradient(tail.x, tail.y, sh.x, sh.y);
-      grad.addColorStop(0, `rgba(255,255,200,0)`);
-      grad.addColorStop(1, `rgba(255,255,200,${sh.life * 0.9})`);
-      ctx.beginPath();
-      ctx.moveTo(tail.x, tail.y);
-      ctx.lineTo(sh.x, sh.y);
-      ctx.strokeStyle = grad;
-      ctx.lineWidth   = 1.5;
-      ctx.stroke();
+    /* glyphs */
+    particles.forEach(p => {
+      const twinkle = p.alpha * (0.7 + 0.3 * Math.sin(p.pulse));
+      ctx.font = `${p.size}px 'Atkinson Hyperlegible', sans-serif`;
+      ctx.fillStyle = p.color + twinkle + ')';
+      ctx.fillText(p.glyph, p.x, p.y);
     });
-
-    /* spawn shooting stars occasionally */
-    if (Math.random() < 0.004) shooters.push(makeShooter());
 
     requestAnimationFrame(draw);
   }
 
-  window.addEventListener('resize', () => { resize(); initStars(); });
-  resize();
-  initStars();
+  window.addEventListener('resize', () => { resize(); init(); });
+  resize(); init();
   requestAnimationFrame(draw);
 })();
 
 /* ══════════════════════════════════════════════════════════
    STORY DATA
-   Each story object drives both the grid card AND the modal.
-   Add new stories here — one object per story.
-   `url` is the Netlify URL of the deployed story.
+   Add new stories by pushing an object here.
    ══════════════════════════════════════════════════════════ */
 const STORIES = [
   {
-    id: 'stellar-quest',
-    title: 'Stellar Quest',
-    subtitle: 'Space Weather Adventure',
-    tag: 'Space Science',
-    tagClass: 'tag-space',
+    id:         'stellar-quest',
+    title:      'Stellar Quest',
+    subtitle:   'Space Weather Adventure',
+    tag:        'Space Science',
+    tagClass:   'tag-space',
     thumbClass: 'thumb-space',
-    emoji: '☀️',
-    desc: 'Meet Solara the Sun, discover solar flares and coronal mass ejections, follow astronaut Fatima through a storm on the ISS, and learn how space weather shapes life on Earth.',
+    emoji:      '☀️',
+    desc:       'Meet Solara the Sun, discover solar flares and coronal mass ejections, follow astronaut Fatima through a storm on the ISS, and learn how space weather shapes life on Earth. A fully narrated 38-scene adventure based on the NASA Space Apps Challenge award-winning project.',
     features: [
       { icon: '🎭', label: 'Scenes',    value: '38' },
       { icon: '🎧', label: 'Narrated',  value: 'Yes' },
       { icon: '🌍', label: 'Language',  value: 'English' },
       { icon: '👶', label: 'Age',       value: '8+' },
       { icon: '⏱️', label: 'Duration',  value: '~15 min' },
-      { icon: '🏆', label: 'Award',     value: 'NASA Space Apps — 1st Ben Guerir' },
+      { icon: '🏆', label: 'Award',     value: '1st place — NASA Space Apps, Ben Guerir' },
     ],
-    url: 'https://stellarquest.netlify.app', /* ← update with real URL */
+    url: 'https://stellarquest.netlify.app', /* ← update with your real Netlify URL */
   },
-  /* ── Add more stories here ────────────────────────────────
+
+  /* ── Add more stories below ──────────────────────────────
   {
-    id: 'ocean-explorers',
-    title: 'Ocean Explorers',
-    subtitle: 'Dive Into the Deep',
-    tag: 'Marine Science',
-    tagClass: 'tag-earth',
-    thumbClass: 'thumb-earth',
-    emoji: '🌊',
-    desc: 'Coming soon.',
-    features: [],
-    url: '#',
+    id:         'robot-origins',
+    title:      'Robot Origins',
+    tag:        'Robotics',
+    tagClass:   'tag-robotics',
+    thumbClass: 'thumb-robotics',
+    emoji:      '🤖',
+    desc:       '...',
+    features:   [...],
+    url:        '#',
   },
-  ──────────────────────────────────────────────────────── */
+  ─────────────────────────────────────────────────────── */
 ];
 
 /* ══════════════════════════════════════════════════════════
    RENDER CARDS
    ══════════════════════════════════════════════════════════ */
-const grid      = document.getElementById('stories-grid');
-const countEl   = document.getElementById('lib-count');
-const searchEl  = document.getElementById('lib-search');
-const modal     = document.getElementById('story-modal');
-
+const grid     = document.getElementById('stories-grid');
+const countEl  = document.getElementById('lib-count');
+const searchEl = document.getElementById('lib-search');
 let query = '';
 
 function renderCards() {
   const filtered = STORIES.filter(s => {
     if (!query) return true;
     const q = query.toLowerCase();
-    return s.title.toLowerCase().includes(q) || s.desc.toLowerCase().includes(q);
+    return s.title.toLowerCase().includes(q) ||
+           s.desc.toLowerCase().includes(q)  ||
+           s.tag.toLowerCase().includes(q);
   });
 
-  /* count */
-  if (countEl) countEl.textContent = filtered.length === 1
-    ? 'Showing <strong>1</strong> story'
-    : `Showing <strong>${filtered.length}</strong> stories`;
+  if (countEl) {
+    const n = filtered.length;
+    countEl.innerHTML = n === 1
+      ? 'Showing <strong>1</strong> story'
+      : `Showing <strong>${n}</strong> stories`;
+  }
 
-  /* grid */
   if (!grid) return;
   grid.innerHTML = '';
 
   if (filtered.length === 0) {
     grid.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-state-icon">🔭</div>
+      <div class="empty-state" role="status">
+        <div class="empty-state-icon">🔬</div>
         <h3>No stories found</h3>
         <p>Try a different search term</p>
       </div>`;
     return;
   }
 
-  filtered.forEach((story, i) => {
+  filtered.forEach(story => {
     const card = document.createElement('div');
     card.className = 'card';
     card.setAttribute('role', 'button');
     card.setAttribute('tabindex', '0');
-    card.setAttribute('aria-label', `Open ${story.title}`);
-    card.style.animationDelay = (i * 0.06) + 's';
+    card.setAttribute('aria-label', `Explore ${story.title}`);
+
+    const sceneCount = story.features.find(f => f.label === 'Scenes')?.value ?? '?';
+    const hasAudio   = story.features.find(f => f.label === 'Narrated')?.value === 'Yes';
+
     card.innerHTML = `
       <div class="card-thumb ${story.thumbClass}">${story.emoji}</div>
       <div class="card-body">
         <span class="card-tag ${story.tagClass}">${story.tag}</span>
         <h2 class="card-title">${story.title}</h2>
-        <p class="card-desc">${story.desc.slice(0, 110)}…</p>
+        <p class="card-desc">${story.desc.slice(0, 115)}…</p>
         <div class="card-footer">
           <div class="card-meta">
-            <span>🎭 ${story.features.find(f=>f.label==='Scenes')?.value ?? '?'} scenes</span>
-            <span>🎧 Narrated</span>
+            <span>🎭 ${sceneCount} scenes</span>
+            ${hasAudio ? '<span>🎧 Narrated</span>' : ''}
           </div>
           <span class="card-cta">
             Explore
@@ -197,8 +218,8 @@ function renderCards() {
         </div>
       </div>`;
 
-    card.addEventListener('click', () => openModal(story));
-    card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') openModal(story); });
+    card.addEventListener('click',   () => openStoryModal(story));
+    card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') openStoryModal(story); });
     grid.appendChild(card);
   });
 }
@@ -206,39 +227,49 @@ function renderCards() {
 /* ══════════════════════════════════════════════════════════
    STORY DETAIL MODAL
    ══════════════════════════════════════════════════════════ */
-function openModal(story) {
-  const m = document.getElementById('story-modal');
-  if (!m) return;
+function openStoryModal(story) {
+  const overlay = document.getElementById('story-modal');
+  if (!overlay) return;
 
-  /* fill modal content */
-  m.querySelector('.modal-thumb').className    = `modal-thumb ${story.thumbClass}`;
-  m.querySelector('.modal-thumb-emoji').textContent = story.emoji;
-  m.querySelector('.modal-tag').className      = `modal-tag ${story.tagClass}`;
-  m.querySelector('.modal-tag').textContent    = story.tag;
-  m.querySelector('.modal-title').textContent  = story.title;
-  m.querySelector('.modal-desc').textContent   = story.desc;
-  m.querySelector('.modal-cta').href           = story.url;
-  m.querySelector('.modal-cta').textContent    = story.url === '#' ? 'Coming Soon' : `Start ${story.title} →`;
-  if (story.url === '#') m.querySelector('.modal-cta').style.opacity = '0.5';
-  else m.querySelector('.modal-cta').style.opacity = '1';
+  overlay.querySelector('.modal-thumb').className           = `modal-thumb ${story.thumbClass}`;
+  overlay.querySelector('.modal-thumb-emoji').textContent   = story.emoji;
+  overlay.querySelector('.modal-tag').className             = `modal-tag ${story.tagClass}`;
+  overlay.querySelector('.modal-tag').textContent           = story.tag;
+  overlay.querySelector('.modal-title').textContent         = story.title;
+  overlay.querySelector('.modal-desc').textContent          = story.desc;
 
-  /* features */
-  const featWrap = m.querySelector('.modal-features');
-  featWrap.innerHTML = story.features.map(f =>
-    `<div class="feature-pill">${f.icon} <span>${f.value}</span> ${f.label}</div>`
-  ).join('');
+  const cta = overlay.querySelector('.modal-cta');
+  const comingSoon = !story.url || story.url === '#';
+  cta.href               = comingSoon ? '#' : story.url;
+  cta.textContent        = comingSoon ? '🔜 Coming Soon' : `Start ${story.title} →`;
+  cta.style.opacity      = comingSoon ? '0.5' : '1';
+  cta.style.pointerEvents = comingSoon ? 'none' : 'auto';
 
-  m.classList.add('open');
-  document.body.style.overflow = 'hidden';
+  overlay.querySelector('.modal-features').innerHTML =
+    story.features.map(f =>
+      `<div class="feature-pill">${f.icon} <span>${f.value}</span> ${f.label}</div>`
+    ).join('');
 
-  /* focus the close button */
-  setTimeout(() => m.querySelector('.modal-close')?.focus(), 50);
+  openOverlay('story-modal');
+  setTimeout(() => overlay.querySelector('.modal-close')?.focus(), 60);
 }
 
-function closeModal() {
-  const m = document.getElementById('story-modal');
-  if (m) m.classList.remove('open');
-  document.body.style.overflow = '';
+/* ══════════════════════════════════════════════════════════
+   ABOUT MODAL
+   ══════════════════════════════════════════════════════════ */
+function openAboutModal() { openOverlay('about-modal'); }
+
+/* ── Generic overlay helpers ────────────────────────────── */
+function openOverlay(id) {
+  document.getElementById(id)?.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeOverlay(id) {
+  document.getElementById(id)?.classList.remove('open');
+  /* restore scroll only if no other overlay is open */
+  if (!document.querySelector('.modal-overlay.open')) {
+    document.body.style.overflow = '';
+  }
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -249,17 +280,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* search */
   if (searchEl) {
-    searchEl.addEventListener('input', e => { query = e.target.value.trim(); renderCards(); });
-    searchEl.addEventListener('keydown', e => { if (e.key === 'Escape') { searchEl.value = ''; query = ''; renderCards(); } });
+    searchEl.addEventListener('input',   e => { query = e.target.value.trim(); renderCards(); });
+    searchEl.addEventListener('keydown', e => {
+      if (e.key === 'Escape') { searchEl.value = ''; query = ''; renderCards(); }
+    });
   }
 
-  /* modal close */
-  const closeBtn = document.getElementById('modal-close-btn');
-  if (closeBtn) closeBtn.addEventListener('click', closeModal);
+  /* About button */
+  document.getElementById('about-btn')?.addEventListener('click', openAboutModal);
 
-  if (modal) {
-    modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
-  }
+  /* Close buttons */
+  document.getElementById('story-modal-close')?.addEventListener('click', () => closeOverlay('story-modal'));
+  document.getElementById('about-modal-close')?.addEventListener('click', () => closeOverlay('about-modal'));
 
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+  /* Backdrop click closes */
+  ['story-modal','about-modal'].forEach(id => {
+    document.getElementById(id)?.addEventListener('click', e => {
+      if (e.target === document.getElementById(id)) closeOverlay(id);
+    });
+  });
+
+  /* Escape key */
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      closeOverlay('story-modal');
+      closeOverlay('about-modal');
+    }
+  });
 });

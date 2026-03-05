@@ -3,106 +3,188 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Stellar Quest — Story Library</title>
-  <meta name="description" content="Stellar Quest — interactive science adventures for curious minds. Explore space, nature, history and beyond through narrated stories." />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>" />
+  <title>StoriesLab — Interactive STEM Adventures</title>
+  <meta name="description" content="StoriesLab by Farah El Ghemary — interactive narrated science stories for curious minds. Space, robotics, biology, math and beyond." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>" />
   <link rel="stylesheet" href="CSS/style.css" />
 </head>
 <body>
 
-<!-- Animated star field canvas -->
-<canvas id="space-canvas" aria-hidden="true"></canvas>
+<!-- STEM particle canvas -->
+<canvas id="stem-canvas" aria-hidden="true"></canvas>
+<!-- Soft colour glow overlay -->
+<div class="bg-glow" aria-hidden="true"></div>
 
 <div class="page">
 
-  <!-- ── Header ──────────────────────────────────────── -->
+  <!-- ════════════════════════════════════════════
+       HEADER
+  ═════════════════════════════════════════════ -->
   <header class="site-header">
-    <a href="#" class="logo-wrap" aria-label="Stellar Quest home">
-      <!-- Generated SVG logo: open book with a rocket emerging -->
-      <svg class="logo-svg" width="46" height="46" viewBox="0 0 46 46" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <circle cx="23" cy="23" r="23" fill="#0f0b2a"/>
+    <a href="#" class="logo-wrap" aria-label="StoriesLab home">
+      <!-- StoriesLab SVG logo: telescope rising from open book, STEM field dots -->
+      <svg class="logo-svg" width="48" height="48" viewBox="0 0 48 48" fill="none"
+           xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <circle cx="24" cy="24" r="24" fill="#0f1020"/>
         <!-- Book left page -->
-        <path d="M8 15 C8 14 9 13 10 13 L22 14.5 L22 33 L10 31.5 C9 31.5 8 30.5 8 29.5 Z"
-              fill="#1a1640" stroke="#f5c842" stroke-width="1.2"/>
+        <path d="M7 17 C7 16 8 15 9 15 L23 16.5 L23 35 L9 33.5 C8 33.5 7 32.5 7 31.5 Z"
+              fill="#181a30" stroke="#5b9cf6" stroke-width="1.1"/>
         <!-- Book right page -->
-        <path d="M38 15 C38 14 37 13 36 13 L24 14.5 L24 33 L36 31.5 C37 31.5 38 30.5 38 29.5 Z"
-              fill="#1a1640" stroke="#f5c842" stroke-width="1.2"/>
-        <!-- Book spine -->
-        <line x1="23" y1="13.5" x2="23" y2="33" stroke="#f5c842" stroke-width="1.5"/>
-        <!-- Rocket body -->
-        <path d="M23 6 L26 14 L23 12 L20 14 Z" fill="#f5c842"/>
-        <!-- Rocket body lower -->
-        <rect x="21" y="12" width="4" height="7" rx="1" fill="#f5c842"/>
-        <!-- Rocket fins -->
-        <path d="M21 17 L18 21 L21 20 Z" fill="#e8a820"/>
-        <path d="M25 17 L28 21 L25 20 Z" fill="#e8a820"/>
-        <!-- Rocket window -->
-        <circle cx="23" cy="15" r="1.3" fill="#0f0b2a"/>
-        <!-- Exhaust glow -->
-        <ellipse cx="23" cy="20" rx="2" ry="1.5" fill="#ff8c3a" opacity="0.8"/>
+        <path d="M41 17 C41 16 40 15 39 15 L25 16.5 L25 35 L39 33.5 C40 33.5 41 32.5 41 31.5 Z"
+              fill="#181a30" stroke="#5b9cf6" stroke-width="1.1"/>
+        <!-- Spine -->
+        <line x1="24" y1="15.5" x2="24" y2="35" stroke="#5b9cf6" stroke-width="1.4"/>
+        <!-- Telescope barrel -->
+        <rect x="21" y="5" width="6" height="13" rx="2.5" fill="#5b9cf6"/>
+        <!-- Lens ring -->
+        <ellipse cx="24" cy="5.5" rx="3" ry="1.8" fill="#3a7fd4"/>
+        <!-- Eyepiece -->
+        <rect x="22.5" y="17" width="3" height="4" rx="1" fill="#3a7fd4"/>
+        <!-- Lens gleam -->
+        <circle cx="22.5" cy="7" r="0.9" fill="rgba(255,255,255,0.5)"/>
+        <!-- STEM dots on pages — multi colour -->
+        <circle cx="13" cy="23" r="1.2" fill="#f5c842" opacity="0.8"/>
+        <circle cx="10" cy="28" r="0.8" fill="#f5c842" opacity="0.5"/>
+        <circle cx="16" cy="30" r="0.8" fill="#34d399" opacity="0.6"/>
+        <circle cx="35" cy="22" r="1.2" fill="#fb7185" opacity="0.8"/>
+        <circle cx="38" cy="27" r="0.8" fill="#a78bfa" opacity="0.6"/>
+        <circle cx="32" cy="30" r="0.8" fill="#fb923c" opacity="0.6"/>
       </svg>
       <div class="logo-text">
-        <div class="logo-name">Stellar Quest</div>
-        <div class="logo-sub">Interactive Science Adventures</div>
+        <div class="logo-name">StoriesLab</div>
+        <div class="logo-sub">Interactive STEM Adventures</div>
       </div>
     </a>
+
+    <nav class="header-nav" aria-label="Site navigation">
+      <button class="nav-pill" id="about-btn" aria-haspopup="dialog">About</button>
+    </nav>
   </header>
 
-  <!-- ── Hero ────────────────────────────────────────── -->
+  <!-- ════════════════════════════════════════════
+       HERO
+  ═════════════════════════════════════════════ -->
   <section class="hero">
-    <div class="hero-eyebrow">✦ Stories that spark curiosity</div>
-    <h1>Learn through <em>adventure</em></h1>
-    <p>Interactive narrated stories across space, nature, history, and beyond — designed for curious minds of all ages.</p>
+    <div class="hero-eyebrow">
+      <span>🔬</span> Where science becomes a story
+    </div>
+    <h1>Complex ideas,<br><em>simple adventures</em></h1>
+    <p class="hero-sub">
+      Narrated interactive stories that turn hard STEM concepts into explorations 
+      you can feel — designed for curious minds of every age.
+    </p>
   </section>
 
-  <!-- ── Search ──────────────────────────────────────── -->
+  <!-- STEM field decorative pills -->
+  <div class="stem-fields" aria-hidden="true">
+    <span class="stem-pill space">☀️ Space</span>
+    <span class="stem-pill bio">🌱 Biology</span>
+    <span class="stem-pill robot">🤖 Robotics</span>
+    <span class="stem-pill math">π Mathematics</span>
+    <span class="stem-pill physics">⚡ Physics</span>
+    <span class="stem-pill cs">💻 Computing</span>
+  </div>
+
+  <!-- ════════════════════════════════════════════
+       STORIES
+  ═════════════════════════════════════════════ -->
+  <div class="section-header">
+    <h2 class="section-title">Stories</h2>
+    <!-- Empty — filled by JS immediately, no flash of wrong text -->
+    <p class="lib-count" id="lib-count" aria-live="polite"></p>
+  </div>
+
   <div class="search-row">
     <div class="search-wrap">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
         <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
       </svg>
-      <input type="search" id="lib-search" placeholder="Search stories…"
+      <input type="search" id="lib-search" placeholder="Search by title, topic…"
              aria-label="Search stories" autocomplete="off" />
     </div>
   </div>
 
-  <!-- ── Count ───────────────────────────────────────── -->
-  <p class="lib-count" id="lib-count" aria-live="polite">
-    Showing <strong>1</strong> story
-  </p>
-
-  <!-- ── Stories Grid ────────────────────────────────── -->
   <div class="stories-grid" id="stories-grid" role="list" aria-label="Story library">
     <!-- Populated by JS -->
   </div>
 
+  <!-- ════════════════════════════════════════════
+       FOOTER
+  ═════════════════════════════════════════════ -->
+  <footer class="site-footer">
+    <div class="footer-left">
+      <strong>StoriesLab</strong> — open science, one story at a time.<br/>
+      Created by <strong>Farah El Ghemary</strong> 
+    </div>
+  </footer>
+
 </div><!-- /page -->
 
-<!-- ── Story Detail Modal ──────────────────────────────── -->
-<div class="modal-overlay" id="story-modal" role="dialog" aria-modal="true" aria-labelledby="modal-story-title">
-
+<!-- ════════════════════════════════════════════
+     STORY DETAIL MODAL
+═════════════════════════════════════════════ -->
+<div class="modal-overlay" id="story-modal" role="dialog" aria-modal="true"
+     aria-labelledby="modal-story-title">
   <div class="story-modal">
-    <button class="modal-close" id="modal-close-btn" aria-label="Close">✕</button>
-
-    <!-- Thumb filled by JS -->
+    <button class="modal-close" id="story-modal-close" aria-label="Close">✕</button>
     <div class="modal-thumb thumb-space">
-      <span class="modal-thumb-emoji" style="position:relative;z-index:1;">☀️</span>
+      <span class="modal-thumb-emoji" style="position:relative;z-index:1;font-size:5rem;">☀️</span>
     </div>
-
     <div class="modal-body">
       <span class="modal-tag tag-space">Tag</span>
       <h2 class="modal-title" id="modal-story-title">Story Title</h2>
-      <p class="modal-desc">Description goes here.</p>
-
-      <!-- Feature pills — filled by JS -->
+      <p class="modal-desc">Description.</p>
       <div class="modal-features"></div>
-
-      <!-- CTA — href filled by JS -->
       <a class="modal-cta" href="#" target="_blank" rel="noopener">Start Story →</a>
     </div>
   </div>
+</div>
 
+<!-- ════════════════════════════════════════════
+     ABOUT MODAL  (Farah intro popup)
+═════════════════════════════════════════════ -->
+<div class="modal-overlay" id="about-modal" role="dialog" aria-modal="true"
+     aria-labelledby="about-modal-title">
+  <div class="about-modal">
+    <button class="modal-close" id="about-modal-close" aria-label="Close about">✕</button>
+
+    <div class="about-modal-header">
+      <div class="about-avatar" aria-hidden="true">👩‍🔬</div>
+      <div class="about-meta">
+        <div class="about-name" id="about-modal-title">Farah El Ghemary</div>
+        <div class="about-role">
+          Lead Robotics Mentor &amp; STEM Educator<br/>
+          Creator of StoriesLab
+        </div>
+      </div>
+    </div>
+
+    <div class="about-modal-body">
+      <p class="about-bio">
+        I believe the best way to understand a complex idea is to <strong>live it as a story</strong>.
+        As a lead robotics mentor, I have spent years watching students light up the moment an abstract 
+        concept — a sensor reading, an orbital mechanic, a chemical reaction — suddenly clicks into 
+        something <em>real and personal</em>.
+      </p>
+      <p class="about-bio">
+        StoriesLab grew out of that conviction. Every adventure here is an attempt to compress years 
+        of classroom insight into a short interactive journey: no jargon gates, no prerequisites — 
+        just <strong>open science told through characters you care about</strong>.
+      </p>
+      <p class="about-bio">
+        My philosophy is simple: <strong>if a child can narrate a concept back to you, they own it.</strong> 
+        Stories do that better than any textbook. That's what this platform is for.
+      </p>
+
+      <div class="about-tags">
+        <span class="about-tag rose">🤖 Lead Robotics Mentor</span>
+        <span class="about-tag blue">🔬 Open Science Advocate</span>
+        <span class="about-tag teal">📖 STEM Storytelling</span>
+        <span class="about-tag purple">🧮 Simplifying Complex Ideas</span>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script src="JS/app.js"></script>
